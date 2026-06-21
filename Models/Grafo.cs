@@ -1,13 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
-using System.Security.Cryptography.X509Certificates;
-using System.Linq;
-
 
 namespace Models
 {
-
     public class Grafo
     {
         private int numVertices;
@@ -18,12 +12,21 @@ namespace Models
         private Dictionary<int, List<Vertice>> lista_adjacencias;
         private double[,] matriz_adjacencias;
 
+        public int NumVertices { get { return numVertices; } }
+        public int NumArestas { get { return numArestas; } }
+        public List<Vertice> Vertices { get { return vertices; } }
+        public List<Aresta> Arestas { get { return arestas; } }
+        public string RepresentacaoAtual { get { return representacaoAtual; } }
+
         public Grafo(int numVertices, int numArestas)
         {
             this.numVertices = numVertices;
             this.numArestas = numArestas;
             vertices = new List<Vertice>();
             arestas = new List<Aresta>();
+            representacaoAtual = "";
+            lista_adjacencias = new Dictionary<int, List<Vertice>>();
+            matriz_adjacencias = new double[0, 0];
             Escolher_Representacao();
         }
 
@@ -32,86 +35,105 @@ namespace Models
 
         public string DefinirDensidade()
         {
-            //A / V (V-1) - Formato de Cálculo - Slides Disciplina
-            double calculoDensidade = (double)numArestas / (numVertices * (numVertices- 1));
-            return calculoDensidade <= 0.5 ? "esparso" : "denso";
+            double calculoDensidade = (double)numArestas / (numVertices * (numVertices - 1));
+
+            if (calculoDensidade <= 0.5)
+            {
+                return "esparso";
+            }
+
+            return "denso";
         }
 
         public void Construir_ListaAjdacencias()
         {
             lista_adjacencias = new Dictionary<int, List<Vertice>>();
         }
+
         public void Contruir_MatrizAdjacencias()
         {
             matriz_adjacencias = new double[numVertices, numVertices];
         }
+
         public string Escolher_Representacao()
         {
             string densidade = DefinirDensidade();
+
             if (densidade == "denso")
             {
                 Contruir_MatrizAdjacencias();
-                representacaoAtual = "Matriz de Adjacências";
+                representacaoAtual = "Matriz de Adjacencias";
             }
             else
             {
                 Construir_ListaAjdacencias();
-                representacaoAtual = "Lista de Adjacências";
+                representacaoAtual = "Lista de Adjacencias";
             }
-            return "Grafo Criado : Modelo Escolhido: " + representacaoAtual;
 
+            return "Grafo Criado : Modelo Escolhido: " + representacaoAtual;
         }
+
         public List<Vertice> ObterAdjacentes(int idVertice)
         {
             List<Vertice> verticesAdjacentes = new List<Vertice>();
 
-            if (representacaoAtual == "Lista de Adjacências")
+            if (representacaoAtual == "Lista de Adjacencias")
             {
-                lista_adjacencias.TryGetValue(idVertice, out verticesAdjacentes);
-                return verticesAdjacentes;
+                if (lista_adjacencias.ContainsKey(idVertice))
+                {
+                    verticesAdjacentes = lista_adjacencias[idVertice];
+                }
 
-            }
-            else
-            {
-                int posVertice = 0;
-                for (int i = 0; i < numVertices; i++)
-                {
-                    if(idVertice == vertices[i].Id)
-                        posVertice = i;
-                }
-                //Utilizo o For para passar por todas as linhas da matriz, somente na coluna referente ao vértice. Utilizo o número de vértices pois é o mesmo
-                //número de colunas da matriz
-                for (int i = 0; i < vertices.Count; i++)
-                {
-                    if (matriz_adjacencias[posVertice, i] != 0)
-                        verticesAdjacentes.Add(vertices[i]);
-                }
                 return verticesAdjacentes;
             }
+
+            int posVertice = ObterIndiceVertice(idVertice);
+
+            if (posVertice == -1)
+            {
+                return verticesAdjacentes;
+            }
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                if (matriz_adjacencias[posVertice, i] != 0)
+                {
+                    verticesAdjacentes.Add(vertices[i]);
+                }
+            }
+
+            return verticesAdjacentes;
         }
 
         public Vertice AdicionarVertice(Vertice v)
         {
-            Vertice existente = vertices.FirstOrDefault(vert => vert.Id == v.Id);
+            Vertice? existente = ObterVerticePorId(v.Id);
+
             if (existente != null)
-                return existente;   // já existia: retorna o que JÁ ESTÁ na lista
+            {
+                return existente;
+            }
 
             vertices.Add(v);
-            if (representacaoAtual == "Lista de Adjacências")
+
+            if (representacaoAtual == "Lista de Adjacencias")
             {
                 lista_adjacencias.Add(v.Id, new List<Vertice>());
             }
+
             return v;
         }
-        public bool AdicionarAresta (Aresta a)
+
+        public bool AdicionarAresta(Aresta a)
         {
-            //Verifica dois pontos, 1º se algum veértice não existe e depois se a aresta já existe.Se algum desses casos é real, a aresta não pode ser adicionada.
-            if (!vertices.Any(v => v.Id == a.Origem.Id) || !vertices.Any(v => v.Id == a.Destino.Id) || arestas.Any(v=> a.Origem.Id == v.Origem.Id && a.Destino.Id == v.Destino.Id))
+            if (ObterVerticePorId(a.Origem.Id) == null || ObterVerticePorId(a.Destino.Id) == null || ArestaExiste(a.Origem.Id, a.Destino.Id))
             {
-                return false;                                       
+                return false;
             }
+
             arestas.Add(a);
-            if(representacaoAtual == "Lista de Adjacências")
+
+            if (representacaoAtual == "Lista de Adjacencias")
             {
                 lista_adjacencias[a.Origem.Id].Add(a.Destino);
                 a.Origem.Atualizar_GrauDeSaida(a.Origem.GrauDeSaida + 1);
@@ -125,10 +147,11 @@ namespace Models
                 vertices[posicaoOrigem].Atualizar_GrauDeSaida(vertices[posicaoOrigem].GrauDeSaida + 1);
                 vertices[posicaoDestino].Atualizar_GrauDeEntrda(vertices[posicaoDestino].GrauDeEntrada + 1);
             }
+
             return true;
         }
 
-        //Método que irá retornar qual a posição do vértice, independente de qual representação esteja sendo utilizada.
+        //Mï¿½todo que irï¿½ retornar qual a posiï¿½ï¿½o do vï¿½rtice, independente de qual representaï¿½ï¿½o esteja sendo utilizada.
         public int PosicaoVertice(Vertice vertice)
         {
            int posicao = vertices.FindIndex(v =>  v.Id == vertice.Id);
@@ -143,7 +166,7 @@ namespace Models
                     pesoAresta = arestas[i].Peso;
             }
             if (pesoAresta == -1)
-                throw new Exception("Aresta não encontrada.");
+                throw new Exception("Aresta nï¿½o encontrada.");
             return pesoAresta;
 
         }
@@ -156,9 +179,48 @@ namespace Models
 
 
 
+            return null;
+        }
 
+        public List<Aresta> ObterArestasSaindoDe(int idVertice)
+        {
+            List<Aresta> arestasSaindo = new List<Aresta>();
+
+            for (int i = 0; i < arestas.Count; i++)
+            {
+                if (arestas[i].Origem.Id == idVertice)
+                {
+                    arestasSaindo.Add(arestas[i]);
+                }
+            }
+
+            return arestasSaindo;
+        }
+
+        private int ObterIndiceVertice(int idVertice)
+        {
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                if (vertices[i].Id == idVertice)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool ArestaExiste(int idOrigem, int idDestino)
+        {
+            for (int i = 0; i < arestas.Count; i++)
+            {
+                if (arestas[i].Origem.Id == idOrigem && arestas[i].Destino.Id == idDestino)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
-
-
-
 }

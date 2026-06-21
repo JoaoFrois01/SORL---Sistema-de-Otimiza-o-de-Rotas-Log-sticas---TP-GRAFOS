@@ -2,7 +2,6 @@ using System;
 
 namespace Models
 {
-
     public class Aresta
     {
         private Vertice origem;
@@ -10,7 +9,6 @@ namespace Models
         private double peso;
         private double capacidade;
         private double fluxoAtual;
-        private Aresta arestaReversa;
 
         public Vertice Origem {get { return origem; }}
         public Vertice Destino {get { return destino; }}
@@ -26,16 +24,20 @@ namespace Models
             this.capacidade = capacidade;
             this.fluxoAtual = fluxoAtual;
         }
+
         public double Atualizar_FluxoAtual(double novoFluxo)
         {
             return fluxoAtual = novoFluxo;
         }
 
-    
+        public double ObterCapacidadeResidual()
+        {
+            return capacidade - fluxoAtual;
+        }
 
-
+        public void LimparFluxo()
+        {
+            fluxoAtual = 0.0;
+        }
     }
-
-
-
 }
