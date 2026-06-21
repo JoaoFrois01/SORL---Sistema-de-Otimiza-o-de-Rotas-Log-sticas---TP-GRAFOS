@@ -30,6 +30,9 @@ namespace Models
             Escolher_Representacao();
         }
 
+        public int NumVertices { get { return numVertices; }}
+        public string RepresentacaoAtual { get { return representacaoAtual; } }
+
         public string DefinirDensidade()
         {
             double calculoDensidade = (double)numArestas / (numVertices * (numVertices - 1));
@@ -138,14 +141,8 @@ namespace Models
             }
             else
             {
-                int posicaoOrigem = ObterIndiceVertice(a.Origem.Id);
-                int posicaoDestino = ObterIndiceVertice(a.Destino.Id);
-
-                if (posicaoOrigem == -1 || posicaoDestino == -1)
-                {
-                    return false;
-                }
-
+                int posicaoOrigem = PosicaoVertice(a.Origem);
+                int posicaoDestino = PosicaoVertice(a.Destino);
                 matriz_adjacencias[posicaoOrigem, posicaoDestino] = a.Peso;
                 vertices[posicaoOrigem].Atualizar_GrauDeSaida(vertices[posicaoOrigem].GrauDeSaida + 1);
                 vertices[posicaoDestino].Atualizar_GrauDeEntrda(vertices[posicaoDestino].GrauDeEntrada + 1);
@@ -154,15 +151,33 @@ namespace Models
             return true;
         }
 
-        public Vertice? ObterVerticePorId(int id)
+        //M�todo que ir� retornar qual a posi��o do v�rtice, independente de qual representa��o esteja sendo utilizada.
+        public int PosicaoVertice(Vertice vertice)
         {
-            for (int i = 0; i < vertices.Count; i++)
+           int posicao = vertices.FindIndex(v =>  v.Id == vertice.Id);
+            return posicao;
+        }
+        public double PesoAresta (Vertice origem, Vertice destino)
+        {
+            double pesoAresta = -1; 
+            for (int i = 0; i < arestas.Count; i++)
             {
-                if (vertices[i].Id == id)
-                {
-                    return vertices[i];
-                }
+                if (arestas[i].Origem.Id == origem.Id && arestas[i].Destino.Id == destino.Id)
+                    pesoAresta = arestas[i].Peso;
             }
+            if (pesoAresta == -1)
+                throw new Exception("Aresta n�o encontrada.");
+            return pesoAresta;
+
+        }
+        public Vertice ObterVertice(int posicao)
+        {
+            return vertices[posicao];
+        }
+
+        public List<Aresta> Arestas{ get {return arestas; } }
+
+
 
             return null;
         }
