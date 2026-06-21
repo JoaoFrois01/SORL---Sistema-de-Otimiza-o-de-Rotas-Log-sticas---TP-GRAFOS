@@ -15,6 +15,21 @@ if (args.Length > 0 && args[0] == "--teste-fluxo")
 }
 
 ExecutarMenuPrincipal(pastaDados, logService);
+static string EscolherGrafo()
+{
+    Console.WriteLine("Escolha um grafo de 1 a 7:");
+    int op = int.Parse(Console.ReadLine());
+    string caminho = "";
+    if (op >= 1 && op <= 7)
+    {
+        caminho = $@"..\..\..\Data\GrafosDimacs\grafo0{op}.dimacs";
+        return caminho;
+    }
+    else
+    {
+        throw new Exception("Opção de grafo inválida.");
+    }
+}
 
 static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
 {
@@ -39,10 +54,31 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
         {
             continuar = false;
         }
+        else if (opcao == 1)
+        {
+            string caminhoGrafo = EscolherGrafo();
+            Grafo grafo = new Grafo();
+            LeitorDimacs.Ler(caminhoGrafo, ref grafo);
+            Console.WriteLine("Escolha o Hub Inicial:");
+            int hubInicial = LerInteiro();
+            Console.WriteLine("Escolha o Hub Final:");
+            int hubFinal = LerInteiro();
+            Console.WriteLine(Dijkstra.MenorCaminho(grafo, grafo.ObterVerticePorId(hubInicial), grafo.ObterVerticePorId(hubFinal)));
+            Console.WriteLine();
+        }
         else if (opcao == 2)
         {
             ExecutarFluxoMaximo(pastaDados, logService);
         }
+        else if (opcao == 3)
+        {
+            string caminhoGrafo = EscolherGrafo();
+            Grafo grafo = new Grafo();
+            LeitorDimacs.Ler(caminhoGrafo, ref grafo);
+            Console.WriteLine(Kruskal.AGM(grafo));
+            Console.WriteLine();
+        }
+
         else if (opcao == 6)
         {
             ExecutarTesteFluxoNosGrafos(pastaDados, logService);

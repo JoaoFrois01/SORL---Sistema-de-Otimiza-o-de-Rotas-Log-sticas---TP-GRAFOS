@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 
 namespace Models
 {
@@ -29,9 +30,17 @@ namespace Models
             matriz_adjacencias = new double[0, 0];
             Escolher_Representacao();
         }
-
-        public int NumVertices { get { return numVertices; }}
-        public string RepresentacaoAtual { get { return representacaoAtual; } }
+        public Grafo()
+        {
+            this.numVertices = 0;
+            this.numArestas = 0;
+            vertices = new List<Vertice>();
+            arestas = new List<Aresta>();
+            representacaoAtual = "";
+            lista_adjacencias = new Dictionary<int, List<Vertice>>();
+            matriz_adjacencias = new double[0, 0];
+            Escolher_Representacao();
+        }
 
         public string DefinirDensidade()
         {
@@ -166,7 +175,7 @@ namespace Models
                     pesoAresta = arestas[i].Peso;
             }
             if (pesoAresta == -1)
-                throw new Exception("Aresta n�o encontrada.");
+                throw new Exception("Aresta não encontrada.");
             return pesoAresta;
 
         }
@@ -175,9 +184,15 @@ namespace Models
             return vertices[posicao];
         }
 
-        public List<Aresta> Arestas{ get {return arestas; } }
-
-
+        public Vertice? ObterVerticePorId(int id)
+        {
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                if (vertices[i].Id == id)
+                {
+                    return vertices[i];
+                }
+            }
 
             return null;
         }
