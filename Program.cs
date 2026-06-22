@@ -45,6 +45,7 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
         Console.WriteLine("4 - Agendamento de manutencoes");
         Console.WriteLine("5 - Percurso de inspecao");
         Console.WriteLine("6 - Testar fluxo maximo nos 7 grafos");
+        Console.WriteLine("7 - Testar inspecao nos 7 grafos");
         Console.WriteLine("0 - Sair");
         Console.Write("Escolha uma opcao: ");
 
@@ -162,6 +163,11 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             ExecutarTesteFluxoNosGrafos(pastaDados, logService);
         }
 
+        else if (opcao == 7)
+        {
+            ExecutarTesteInspecaoNosGrafos(pastaDados, logService);
+        }
+
         else
         {
             Console.WriteLine("Opcao invalida.");
@@ -259,6 +265,66 @@ static void ExecutarTesteFluxoNosGrafos(string pastaDados, LogService logService
     }
 
     Console.WriteLine();
+}
+
+static void ExecutarTesteInspecaoNosGrafos(string pastaDados, LogService logService)
+{
+    string[] arquivos = ObterArquivosDimacs(pastaDados);
+
+    if (arquivos.Length == 0)
+    {
+        Console.WriteLine("Nenhum arquivo DIMACS foi encontrado em " + pastaDados + ".");
+        return;
+    }
+
+    Console.WriteLine("=== Teste automatico de inspecao nos 7 grafos ===");
+    Console.WriteLine();
+
+    for (int i = 0; i < arquivos.Length; i++)
+    {
+        Grafo grafo = new Grafo();
+        string nomeGrafo = Path.GetFileName(arquivos[i]);
+
+        if (!LeitorDimacs.Ler(arquivos[i], ref grafo))
+        {
+            Console.WriteLine(nomeGrafo + " | erro ao carregar.");
+            continue;
+        }
+
+        Console.WriteLine(nomeGrafo + " | " + grafo.Vertices.Count + "v " + grafo.Arestas.Count + "a");
+
+        Coloracao coloracao = new Coloracao();
+        Dictionary<int, int> corPorRota = coloracao.Colorir(grafo);
+        Dictionary<int, List<string>> turnos = coloracao.MontarTurnos(corPorRota);
+        int totalTurnos = coloracao.NumeroMinimoDeTurnos(corPorRota);
+        logService.RegistrarColoracao(nomeGrafo, grafo, turnos, totalTurnos);
+        Console.WriteLine("  Coloracao: " + totalTurnos + " turno(s)");
+
+        bool euleriano = Euleriano.VerificarEuleriano(grafo);
+        List<int>? circuitoEuleriano = null;
+        if (euleriano)
+            circuitoEuleriano = Euleriano.ConstruirCircuito(grafo);
+        Console.WriteLine("  Euleriano: " + (euleriano ? "EXISTE" : "NAO existe"));
+
+        List<int>? cicloHamiltoniano = null;
+        bool hamiltoniano = false;
+
+        if (grafo.Vertices.Count <= 20)
+        {
+            Console.WriteLine("  Hamiltoniano: buscando...");
+            cicloHamiltoniano = Hamiltoniano.EncontrarCicloHamiltoniano(grafo);
+            hamiltoniano = cicloHamiltoniano != null;
+            Console.WriteLine("  Hamiltoniano: " + (hamiltoniano ? "EXISTE" : "NAO existe"));
+        }
+        else
+        {
+            Console.WriteLine("  Hamiltoniano: grafo grande demais para backtracking (> 20 vertices)");
+        }
+
+        string caminhoLog = logService.RegistrarInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, cicloHamiltoniano);
+        Console.WriteLine("  Log: " + caminhoLog);
+        Console.WriteLine();
+    }
 }
 
 static string[] ObterArquivosDimacs(string pastaDados)
