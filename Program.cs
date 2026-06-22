@@ -22,12 +22,13 @@ static string EscolherGrafo()
     string caminho = "";
     if (op >= 1 && op <= 7)
     {
-        caminho = $@"..\..\..\Data\GrafosDimacs\grafo0{op}.dimacs";
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        caminho = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "Data", "GrafosDimacs", $"grafo0{op}.dimacs"));
         return caminho;
     }
     else
     {
-        throw new Exception("Opção de grafo inválida.");
+        throw new Exception("OpÃ§Ã£o de grafo invÃ¡lida.");
     }
 }
 
@@ -79,13 +80,91 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             Console.WriteLine();
         }
 
+        else if (opcao == 4)
+        {
+            string caminhoGrafo = EscolherGrafo();
+            Grafo grafo = new Grafo();
+            LeitorDimacs.Ler(caminhoGrafo, ref grafo);
+
+            Coloracao coloracao = new Coloracao();
+            Dictionary<int, int> corPorRota = coloracao.Colorir(grafo);
+            Dictionary<int, List<string>> turnos = coloracao.MontarTurnos(corPorRota);
+            int totalTurnos = coloracao.NumeroMinimoDeTurnos(corPorRota);
+
+            Console.WriteLine("Numero minimo de turnos: " + totalTurnos);
+            Console.WriteLine();
+
+            List<int> turnosOrdenados = new List<int>(turnos.Keys);
+            turnosOrdenados.Sort();
+
+            foreach (int turno in turnosOrdenados)
+            {
+                Console.WriteLine("Turno " + turno + " (" + turnos[turno].Count + " rota(s)):");
+                foreach (string rota in turnos[turno])
+                {
+                    Console.WriteLine("  " + rota);
+                }
+                Console.WriteLine();
+            }
+
+            string nomeGrafo = Path.GetFileName(caminhoGrafo);
+            string caminhoLog = logService.RegistrarColoracao(nomeGrafo, grafo, turnos, totalTurnos);
+            Console.WriteLine("Log salvo em: " + caminhoLog);
+            Console.WriteLine();
+        }
+
+        else if (opcao == 5)
+        {
+            string caminhoGrafo = EscolherGrafo();
+            Grafo grafo = new Grafo();
+            LeitorDimacs.Ler(caminhoGrafo, ref grafo);
+
+            bool euleriano = Euleriano.VerificarEuleriano(grafo);
+            List<int>? circuitoEuleriano = null;
+
+            Console.WriteLine("-- Cenario A: Circuito Euleriano --");
+            if (euleriano)
+            {
+                circuitoEuleriano = Euleriano.ConstruirCircuito(grafo);
+                Console.WriteLine("EXISTE circuito euleriano.");
+                Console.WriteLine("Percurso: " + Euleriano.FormatarCircuito(circuitoEuleriano));
+            }
+            else
+            {
+                Console.WriteLine("NAO existe circuito euleriano neste grafo.");
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("-- Cenario B: Ciclo Hamiltoniano --");
+            Console.WriteLine("(Buscando via backtracking, pode demorar em grafos grandes...)");
+            List<int>? cicloHamiltoniano = Hamiltoniano.EncontrarCicloHamiltoniano(grafo);
+            bool hamiltoniano = cicloHamiltoniano != null;
+
+            if (hamiltoniano)
+            {
+                Console.WriteLine("EXISTE ciclo hamiltoniano.");
+                Console.WriteLine("Percurso: " + Hamiltoniano.FormatarCiclo(cicloHamiltoniano!));
+            }
+            else
+            {
+                Console.WriteLine("NAO existe ciclo hamiltoniano neste grafo.");
+            }
+            Console.WriteLine();
+
+            string nomeGrafo = Path.GetFileName(caminhoGrafo);
+            string caminhoLog = logService.RegistrarInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, cicloHamiltoniano);
+            Console.WriteLine("Log salvo em: " + caminhoLog);
+            Console.WriteLine();
+        }
+
         else if (opcao == 6)
         {
             ExecutarTesteFluxoNosGrafos(pastaDados, logService);
         }
+
         else
         {
-            Console.WriteLine("Opcao ainda nao implementada nesta etapa do projeto.");
+            Console.WriteLine("Opcao invalida.");
             Console.WriteLine();
         }
     }
