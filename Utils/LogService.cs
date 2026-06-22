@@ -138,5 +138,113 @@ namespace Utils
 
             return limpo;
         }
+        public string RegistrarColoracao(string nomeGrafo, Grafo grafo, Dictionary<int, List<string>> turnos, int totalTurnos)
+        {
+            string nomeArquivo = "coloracao_" + LimparNomeArquivo(nomeGrafo) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+            string caminhoArquivo = Path.Combine(pastaLogs, nomeArquivo);
+            string conteudo = MontarTextoColoracao(nomeGrafo, grafo, turnos, totalTurnos);
+
+            StreamWriter escritor = new StreamWriter(caminhoArquivo, false, Encoding.UTF8);
+            escritor.Write(conteudo);
+            escritor.Close();
+
+            return caminhoArquivo;
+        }
+
+        public string MontarTextoColoracao(string nomeGrafo, Grafo grafo, Dictionary<int, List<string>> turnos, int totalTurnos)
+        {
+            StringBuilder texto = new StringBuilder();
+
+            texto.AppendLine("=== Agendamento de Manutencoes (Coloracao de Grafos) ===");
+            texto.AppendLine("Grafo: " + nomeGrafo);
+            texto.AppendLine("Algoritmo executado: Coloracao Gulosa (Welsh-Powell)");
+            texto.AppendLine("Criterio de conflito: rotas que compartilham um hub em comum");
+            texto.AppendLine("Total de rotas: " + grafo.Arestas.Count);
+            texto.AppendLine("Numero minimo de turnos necessarios: " + totalTurnos);
+            texto.AppendLine();
+
+            List<int> turnosOrdenados = new List<int>(turnos.Keys);
+            turnosOrdenados.Sort();
+
+            foreach (int turno in turnosOrdenados)
+            {
+                texto.AppendLine("Turno " + turno + " (" + turnos[turno].Count + " rota(s)):");
+
+                foreach (string rota in turnos[turno])
+                {
+                    texto.AppendLine("  Rota: " + rota);
+                }
+
+                texto.AppendLine();
+            }
+
+            texto.AppendLine("Interpretacao logistica:");
+            texto.AppendLine("Rotas no mesmo turno nao compartilham hubs, portanto podem ser inspecionadas/mantidas simultaneamente sem conflito de recursos (patios, oficinas, equipamentos).");
+
+            return texto.ToString();
+        }
+
+        public string RegistrarInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int>? circuitoEuleriano, bool hamiltoniano, List<int>? cicloHamiltoniano)
+        {
+            string nomeArquivo = "inspecao_" + LimparNomeArquivo(nomeGrafo) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+            string caminhoArquivo = Path.Combine(pastaLogs, nomeArquivo);
+            string conteudo = MontarTextoInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, cicloHamiltoniano);
+
+            StreamWriter escritor = new StreamWriter(caminhoArquivo, false, Encoding.UTF8);
+            escritor.Write(conteudo);
+            escritor.Close();
+
+            return caminhoArquivo;
+        }
+
+        public string MontarTextoInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int>? circuitoEuleriano, bool hamiltoniano, List<int>? cicloHamiltoniano)
+        {
+            StringBuilder texto = new StringBuilder();
+
+            texto.AppendLine("=== Rota Unica de Inspecao ===");
+            texto.AppendLine("Grafo: " + nomeGrafo);
+            texto.AppendLine("Vertices: " + grafo.Vertices.Count);
+            texto.AppendLine("Arestas: " + grafo.Arestas.Count);
+            texto.AppendLine();
+
+            texto.AppendLine("-- Cenario A: Percurso de Rotas (Circuito Euleriano) --");
+            texto.AppendLine("Algoritmo executado: verificacao de graus + Hierholzer");
+            texto.AppendLine("Condicao: grau de entrada == grau de saida para todo vertice e grafo fracamente conexo");
+
+            if (euleriano && circuitoEuleriano != null)
+            {
+                texto.AppendLine("Resultado: EXISTE circuito euleriano");
+                texto.AppendLine("Percurso: " + Euleriano.FormatarCircuito(circuitoEuleriano));
+            }
+            else
+            {
+                texto.AppendLine("Resultado: NAO existe circuito euleriano");
+                texto.AppendLine("Motivo: algum vertice tem grau de entrada diferente do grau de saida, ou o grafo nao e conexo.");
+            }
+
+            texto.AppendLine();
+            texto.AppendLine("-- Cenario B: Percurso de Hubs (Ciclo Hamiltoniano) --");
+            texto.AppendLine("Algoritmo executado: Backtracking com poda");
+            texto.AppendLine("Vertice inicial: " + (grafo.Vertices.Count > 0 ? grafo.Vertices[0].Id.ToString() : "N/A"));
+
+            if (hamiltoniano && cicloHamiltoniano != null)
+            {
+                texto.AppendLine("Resultado: EXISTE ciclo hamiltoniano");
+                texto.AppendLine("Percurso: " + Hamiltoniano.FormatarCiclo(cicloHamiltoniano));
+            }
+            else
+            {
+                texto.AppendLine("Resultado: NAO existe ciclo hamiltoniano");
+                texto.AppendLine("Motivo: nenhum caminho que visita todos os hubs exatamente uma vez e retorna ao inicio foi encontrado.");
+            }
+
+            texto.AppendLine();
+            texto.AppendLine("Interpretacao logistica:");
+            texto.AppendLine("Circuito Euleriano: o inspetor consegue percorrer TODAS as estradas exatamente uma vez e voltar ao ponto de partida — rota ideal para inspecao de vias.");
+            texto.AppendLine("Ciclo Hamiltoniano: o inspetor consegue visitar TODOS os hubs exatamente uma vez e voltar ao inicio — rota ideal para inspecao de centros de distribuicao.");
+
+            return texto.ToString();
+        }
     }
+
 }
