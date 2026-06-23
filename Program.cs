@@ -15,10 +15,11 @@ if (args.Length > 0 && args[0] == "--teste-fluxo")
 }
 
 ExecutarMenuPrincipal(pastaDados, logService);
+
 static string EscolherGrafo()
 {
     Console.WriteLine("Escolha um grafo de 1 a 7:");
-    int op = int.Parse(Console.ReadLine());
+    int op = LerInteiro();
     string caminho = "";
     if (op >= 1 && op <= 7)
     {
@@ -61,11 +62,23 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             string caminhoGrafo = EscolherGrafo();
             Grafo grafo = new Grafo();
             LeitorDimacs.Ler(caminhoGrafo, ref grafo);
+            
             Console.WriteLine("Escolha o Hub Inicial:");
             int hubInicial = LerInteiro();
             Console.WriteLine("Escolha o Hub Final:");
             int hubFinal = LerInteiro();
-            Console.WriteLine(Dijkstra.MenorCaminho(grafo, grafo.ObterVerticePorId(hubInicial), grafo.ObterVerticePorId(hubFinal)));
+
+            Vertice? vInicial = grafo.ObterVerticePorId(hubInicial);
+            Vertice? vFinal = grafo.ObterVerticePorId(hubFinal);
+
+            if (vInicial != null && vFinal != null)
+            {
+                Console.WriteLine(Dijkstra.MenorCaminho(grafo, vInicial, vFinal));
+            }
+            else
+            {
+                Console.WriteLine("Erro: Hub inicial ou final não encontrado no grafo.");
+            }
             Console.WriteLine();
         }
         else if (opcao == 2)
@@ -80,7 +93,6 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             Console.WriteLine(Kruskal.AGM(grafo));
             Console.WriteLine();
         }
-
         else if (opcao == 4)
         {
             string caminhoGrafo = EscolherGrafo();
@@ -113,7 +125,6 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             Console.WriteLine("Log salvo em: " + caminhoLog);
             Console.WriteLine();
         }
-
         else if (opcao == 5)
         {
             string caminhoGrafo = EscolherGrafo();
@@ -137,37 +148,25 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             Console.WriteLine();
 
             Console.WriteLine("-- Cenario B: Ciclo Hamiltoniano --");
-            Console.WriteLine("(Buscando via backtracking, pode demorar em grafos grandes...)");
-            List<int>? cicloHamiltoniano = Hamiltoniano.EncontrarCicloHamiltoniano(grafo);
-            bool hamiltoniano = cicloHamiltoniano != null;
-
-            if (hamiltoniano)
-            {
-                Console.WriteLine("EXISTE ciclo hamiltoniano.");
-                Console.WriteLine("Percurso: " + Hamiltoniano.FormatarCiclo(cicloHamiltoniano!));
-            }
-            else
-            {
-                Console.WriteLine("NAO existe ciclo hamiltoniano neste grafo.");
-            }
+            bool hamiltoniano = Hamiltoniano.VerificarHamiltoniano(grafo);
+            string resultadoHamiltoniano = Hamiltoniano.FormatarResultado(grafo);
+            
+            Console.WriteLine(resultadoHamiltoniano);
             Console.WriteLine();
 
             string nomeGrafo = Path.GetFileName(caminhoGrafo);
-            string caminhoLog = logService.RegistrarInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, cicloHamiltoniano);
+            string caminhoLog = logService.RegistrarInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, resultadoHamiltoniano);
             Console.WriteLine("Log salvo em: " + caminhoLog);
             Console.WriteLine();
         }
-
         else if (opcao == 6)
         {
             ExecutarTesteFluxoNosGrafos(pastaDados, logService);
         }
-
         else if (opcao == 7)
         {
             ExecutarTesteInspecaoNosGrafos(pastaDados, logService);
         }
-
         else
         {
             Console.WriteLine("Opcao invalida.");
@@ -306,22 +305,11 @@ static void ExecutarTesteInspecaoNosGrafos(string pastaDados, LogService logServ
             circuitoEuleriano = Euleriano.ConstruirCircuito(grafo);
         Console.WriteLine("  Euleriano: " + (euleriano ? "EXISTE" : "NAO existe"));
 
-        List<int>? cicloHamiltoniano = null;
-        bool hamiltoniano = false;
+        bool hamiltoniano = Hamiltoniano.VerificarHamiltoniano(grafo);
+        string resultadoHamiltoniano = Hamiltoniano.FormatarResultado(grafo);
+        Console.WriteLine("  Hamiltoniano: \n" + resultadoHamiltoniano);
 
-        if (grafo.Vertices.Count <= 20)
-        {
-            Console.WriteLine("  Hamiltoniano: buscando...");
-            cicloHamiltoniano = Hamiltoniano.EncontrarCicloHamiltoniano(grafo);
-            hamiltoniano = cicloHamiltoniano != null;
-            Console.WriteLine("  Hamiltoniano: " + (hamiltoniano ? "EXISTE" : "NAO existe"));
-        }
-        else
-        {
-            Console.WriteLine("  Hamiltoniano: grafo grande demais para backtracking (> 20 vertices)");
-        }
-
-        string caminhoLog = logService.RegistrarInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, cicloHamiltoniano);
+        string caminhoLog = logService.RegistrarInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, resultadoHamiltoniano);
         Console.WriteLine("  Log: " + caminhoLog);
         Console.WriteLine();
     }
@@ -368,13 +356,15 @@ static int LerInteiro()
 
     while (!numeroValido)
     {
+        if (string.IsNullOrWhiteSpace(entrada))
+        {
+            Console.Write("Valor invalido. Digite um numero inteiro: ");
+            entrada = Console.ReadLine();
+            continue;
+        }
+
         try
         {
-            if (entrada == null)
-            {
-                entrada = "";
-            }
-
             valor = int.Parse(entrada);
             numeroValido = true;
         }

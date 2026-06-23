@@ -138,6 +138,7 @@ namespace Utils
 
             return limpo;
         }
+
         public string RegistrarColoracao(string nomeGrafo, Grafo grafo, Dictionary<int, List<string>> turnos, int totalTurnos)
         {
             string nomeArquivo = "coloracao_" + LimparNomeArquivo(nomeGrafo) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
@@ -184,11 +185,11 @@ namespace Utils
             return texto.ToString();
         }
 
-        public string RegistrarInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int>? circuitoEuleriano, bool hamiltoniano, List<int>? cicloHamiltoniano)
+        public string RegistrarInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int> circuitoEuleriano, bool hamiltoniano, string resultadoHamiltoniano)
         {
             string nomeArquivo = "inspecao_" + LimparNomeArquivo(nomeGrafo) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
             string caminhoArquivo = Path.Combine(pastaLogs, nomeArquivo);
-            string conteudo = MontarTextoInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, cicloHamiltoniano);
+            string conteudo = MontarTextoInspecao(nomeGrafo, grafo, euleriano, circuitoEuleriano, hamiltoniano, resultadoHamiltoniano);
 
             StreamWriter escritor = new StreamWriter(caminhoArquivo, false, Encoding.UTF8);
             escritor.Write(conteudo);
@@ -197,7 +198,7 @@ namespace Utils
             return caminhoArquivo;
         }
 
-        public string MontarTextoInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int>? circuitoEuleriano, bool hamiltoniano, List<int>? cicloHamiltoniano)
+        public string MontarTextoInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int> circuitoEuleriano, bool hamiltoniano, string resultadoHamiltoniano)
         {
             StringBuilder texto = new StringBuilder();
 
@@ -208,7 +209,7 @@ namespace Utils
             texto.AppendLine();
 
             texto.AppendLine("-- Cenario A: Percurso de Rotas (Circuito Euleriano) --");
-            texto.AppendLine("Algoritmo executado: verificacao de graus + Hierholzer");
+            texto.AppendLine("Algoritmo executado: verificacao de graus + Fleury");
             texto.AppendLine("Condicao: grau de entrada == grau de saida para todo vertice e grafo fracamente conexo");
 
             if (euleriano && circuitoEuleriano != null)
@@ -224,19 +225,11 @@ namespace Utils
 
             texto.AppendLine();
             texto.AppendLine("-- Cenario B: Percurso de Hubs (Ciclo Hamiltoniano) --");
-            texto.AppendLine("Algoritmo executado: Backtracking com poda");
+            texto.AppendLine("Algoritmo executado: Verificacao por Teoremas (Dirac, Ore, Bondy-Chvatal) + Forca Bruta");
             texto.AppendLine("Vertice inicial: " + (grafo.Vertices.Count > 0 ? grafo.Vertices[0].Id.ToString() : "N/A"));
-
-            if (hamiltoniano && cicloHamiltoniano != null)
-            {
-                texto.AppendLine("Resultado: EXISTE ciclo hamiltoniano");
-                texto.AppendLine("Percurso: " + Hamiltoniano.FormatarCiclo(cicloHamiltoniano));
-            }
-            else
-            {
-                texto.AppendLine("Resultado: NAO existe ciclo hamiltoniano");
-                texto.AppendLine("Motivo: nenhum caminho que visita todos os hubs exatamente uma vez e retorna ao inicio foi encontrado.");
-            }
+            texto.AppendLine();
+            
+            texto.AppendLine(resultadoHamiltoniano);
 
             texto.AppendLine();
             texto.AppendLine("Interpretacao logistica:");
@@ -246,5 +239,4 @@ namespace Utils
             return texto.ToString();
         }
     }
-
 }

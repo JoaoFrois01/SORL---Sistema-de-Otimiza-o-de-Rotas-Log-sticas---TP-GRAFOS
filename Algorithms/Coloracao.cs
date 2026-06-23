@@ -51,32 +51,38 @@ namespace TP_GRAFOS.Algorithms
         {
             ConstruirGrafoDeConflitos(grafo);
 
-            Dictionary<int, int> corPorRota = new Dictionary<int, int>();
-
             List<int> ordemDeProcessamento = Enumerable.Range(0, rotas.Count)
                 .OrderByDescending(indice => grafoConflitos[indice].Count)
                 .ToList();
 
-            foreach (int indiceRota in ordemDeProcessamento)
-            {
-                HashSet<int> coresUsadasPelosVizinhos = new HashSet<int>();
+            Dictionary<int, int> corPorRota = new Dictionary<int, int>();
+            int corAtual = 1;
 
-                foreach (int vizinho in grafoConflitos[indiceRota])
+            while (corPorRota.Count < rotas.Count)
+            {
+                foreach (int indiceRota in ordemDeProcessamento)
                 {
-                    if (corPorRota.ContainsKey(vizinho))
+                    if (corPorRota.ContainsKey(indiceRota))
+                        continue;
+
+                    bool conflito = false;
+
+                    foreach (int vizinho in grafoConflitos[indiceRota])
                     {
-                        coresUsadasPelosVizinhos.Add(corPorRota[vizinho]);
+                        if (corPorRota.ContainsKey(vizinho) && corPorRota[vizinho] == corAtual)
+                        {
+                            conflito = true;
+                            break;
+                        }
+                    }
+
+                    if (!conflito)
+                    {
+                        corPorRota[indiceRota] = corAtual;
                     }
                 }
 
-                int cor = 1;
-
-                while (coresUsadasPelosVizinhos.Contains(cor))
-                {
-                    cor++;
-                }
-
-                corPorRota[indiceRota] = cor;
+                corAtual++;
             }
 
             return corPorRota;

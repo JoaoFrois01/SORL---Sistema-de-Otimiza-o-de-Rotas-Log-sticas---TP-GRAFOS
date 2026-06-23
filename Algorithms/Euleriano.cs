@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Models;
 
 namespace TP_GRAFOS.Algorithms
@@ -24,7 +23,7 @@ namespace TP_GRAFOS.Algorithms
                 }
             }
 
-            if (!TodosConectados(grafo))
+            if (!GrafoEConexo(grafo))
             {
                 return false;
             }
@@ -32,39 +31,54 @@ namespace TP_GRAFOS.Algorithms
             return true;
         }
 
-        private static bool TodosConectados(Grafo grafo)
+        private static bool GrafoEConexo(Grafo grafo)
         {
-            Vertice? inicio = grafo.Vertices.FirstOrDefault(v => v.GrauDeSaida > 0 || v.GrauDeEntrada > 0);
+            Dictionary<int, List<int>> adjacencia = new Dictionary<int, List<int>>();
 
-            if (inicio == null)
+            for (int i = 0; i < grafo.Vertices.Count; i++)
+            {
+                adjacencia[grafo.Vertices[i].Id] = new List<int>();
+            }
+
+            for (int i = 0; i < grafo.Arestas.Count; i++)
+            {
+                Aresta a = grafo.Arestas[i];
+                adjacencia[a.Origem.Id].Add(a.Destino.Id);
+                adjacencia[a.Destino.Id].Add(a.Origem.Id);
+            }
+
+            int verticeInicial = -1;
+
+            for (int i = 0; i < grafo.Vertices.Count; i++)
+            {
+                Vertice v = grafo.Vertices[i];
+
+                if (v.GrauDeSaida > 0 || v.GrauDeEntrada > 0)
+                {
+                    verticeInicial = v.Id;
+                    break;
+                }
+            }
+
+            if (verticeInicial == -1)
             {
                 return true;
-            }
-            
-            Dictionary<int, HashSet<int>> adjacenciaNaoDirecionada = new Dictionary<int, HashSet<int>>();
-
-            foreach (Vertice v in grafo.Vertices)
-            {
-                adjacenciaNaoDirecionada[v.Id] = new HashSet<int>();
-            }
-
-            foreach (Aresta a in grafo.Arestas)
-            {
-                adjacenciaNaoDirecionada[a.Origem.Id].Add(a.Destino.Id);
-                adjacenciaNaoDirecionada[a.Destino.Id].Add(a.Origem.Id);
             }
 
             HashSet<int> visitados = new HashSet<int>();
             Queue<int> fila = new Queue<int>();
-            fila.Enqueue(inicio.Id);
-            visitados.Add(inicio.Id);
+
+            fila.Enqueue(verticeInicial);
+            visitados.Add(verticeInicial);
 
             while (fila.Count > 0)
             {
                 int atual = fila.Dequeue();
 
-                foreach (int vizinho in adjacenciaNaoDirecionada[atual])
+                for (int i = 0; i < adjacencia[atual].Count; i++)
                 {
+                    int vizinho = adjacencia[atual][i];
+
                     if (!visitados.Contains(vizinho))
                     {
                         visitados.Add(vizinho);
@@ -73,8 +87,9 @@ namespace TP_GRAFOS.Algorithms
                 }
             }
 
-            foreach (Vertice v in grafo.Vertices)
+            for (int i = 0; i < grafo.Vertices.Count; i++)
             {
+                Vertice v = grafo.Vertices[i];
                 bool temGrau = v.GrauDeEntrada > 0 || v.GrauDeSaida > 0;
 
                 if (temGrau && !visitados.Contains(v.Id))
@@ -93,43 +108,126 @@ namespace TP_GRAFOS.Algorithms
                 throw new Exception("O grafo nao possui circuito euleriano.");
             }
 
-            Dictionary<int, List<int>> arestasDisponiveis = new Dictionary<int, List<int>>();
+            Dictionary<int, List<int>> gAux = new Dictionary<int, List<int>>();
 
-            foreach (Vertice v in grafo.Vertices)
+            for (int i = 0; i < grafo.Vertices.Count; i++)
             {
-                arestasDisponiveis[v.Id] = new List<int>();
+                gAux[grafo.Vertices[i].Id] = new List<int>();
             }
 
-            foreach (Aresta a in grafo.Arestas)
+            for (int i = 0; i < grafo.Arestas.Count; i++)
             {
-                arestasDisponiveis[a.Origem.Id].Add(a.Destino.Id);
+                gAux[grafo.Arestas[i].Origem.Id].Add(grafo.Arestas[i].Destino.Id);
             }
 
-            int verticeInicial = grafo.Arestas[0].Origem.Id;
+            int verticeAtual = -1;
 
-            Stack<int> pilha = new Stack<int>();
-            List<int> circuito = new List<int>();
-            pilha.Push(verticeInicial);
-
-            while (pilha.Count > 0)
+            for (int i = 0; i < grafo.Vertices.Count; i++)
             {
-                int atual = pilha.Peek();
-
-                if (arestasDisponiveis[atual].Count > 0)
+                if (gAux[grafo.Vertices[i].Id].Count > 0)
                 {
-                    int proximo = arestasDisponiveis[atual][0];
-                    arestasDisponiveis[atual].RemoveAt(0);
-                    pilha.Push(proximo);
+                    verticeAtual = grafo.Vertices[i].Id;
+                    break;
+                }
+            }
+
+            List<int> circuito = new List<int>();
+            circuito.Add(verticeAtual);
+
+            while (ContarArestas(gAux) > 0)
+            {
+                List<int> vizinhos = gAux[verticeAtual];
+
+                int proximo;
+
+                if (vizinhos.Count == 1)
+                {
+                    proximo = vizinhos[0];
                 }
                 else
                 {
-                    circuito.Add(pilha.Pop());
+                    proximo = EscolherArestaNaoPonte(verticeAtual, gAux);
+                }
+
+                gAux[verticeAtual].Remove(proximo);
+                verticeAtual = proximo;
+                circuito.Add(verticeAtual);
+            }
+
+            return circuito;
+        }
+
+        private static int EscolherArestaNaoPonte(int vertice, Dictionary<int, List<int>> gAux)
+        {
+            List<int> candidatos = new List<int>(gAux[vertice]);
+
+            for (int i = 0; i < candidatos.Count; i++)
+            {
+                int candidato = candidatos[i];
+
+                gAux[vertice].Remove(candidato);
+
+                bool ehPonte = ContarArestas(gAux) > 0
+                               && !TodasArestasAlcancaveis(candidato, gAux);
+
+                gAux[vertice].Add(candidato);
+
+                if (!ehPonte)
+                {
+                    return candidato;
                 }
             }
 
-            circuito.Reverse();
-            return circuito;
+            return gAux[vertice][0];
         }
+
+        private static bool TodasArestasAlcancaveis(int inicio, Dictionary<int, List<int>> gAux)
+        {
+            HashSet<int> visitados = new HashSet<int>();
+            Queue<int> fila = new Queue<int>();
+
+            fila.Enqueue(inicio);
+            visitados.Add(inicio);
+
+            while (fila.Count > 0)
+            {
+                int atual = fila.Dequeue();
+
+                for (int i = 0; i < gAux[atual].Count; i++)
+                {
+                    int proximo = gAux[atual][i];
+
+                    if (!visitados.Contains(proximo))
+                    {
+                        visitados.Add(proximo);
+                        fila.Enqueue(proximo);
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<int, List<int>> par in gAux)
+            {
+                if (par.Value.Count > 0 && !visitados.Contains(par.Key))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static int ContarArestas(Dictionary<int, List<int>> gAux)
+        {
+            int total = 0;
+
+            foreach (List<int> lista in gAux.Values)
+            {
+                total += lista.Count;
+            }
+
+            return total;
+        }
+
         public static string FormatarCircuito(List<int> circuito)
         {
             return string.Join(" -> ", circuito);
