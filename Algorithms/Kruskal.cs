@@ -11,23 +11,23 @@ namespace TP_GRAFOS.Algorithms
 
         private static int Encontrar(int i)
         {
-            // TODO A
+            
             if (grupo[i] == i)
             {
                 return i;
             }
 
-            // TODO B
+            
             return Encontrar(grupo[i]);
         }
 
         private static void Unir(int i, int j)
         {
-            // TODO C
+            
             int representanteI = Encontrar(i);
             int representanteJ = Encontrar(j);
 
-            // TODO D
+            
             if (representanteI != representanteJ)
             {
                 grupo[representanteI] = representanteJ;
@@ -45,7 +45,7 @@ namespace TP_GRAFOS.Algorithms
                 grupo[i] = i;
             }
 
-            // TODO 1
+            
             List<Aresta> arestasOrdenadas = grafo.Arestas
                 .OrderBy(a => a.Peso)
                 .ToList();
@@ -53,7 +53,7 @@ namespace TP_GRAFOS.Algorithms
             List<Aresta> arvoreGeradora = new List<Aresta>();
             double custoTotal = 0;
 
-            // TODO 2
+            
             foreach (Aresta aresta in arestasOrdenadas)
             {
                 int posOrigem =
@@ -78,7 +78,7 @@ namespace TP_GRAFOS.Algorithms
                 }
             }
 
-            // TODO 3
+            
             string resultado = "";
 
             if (arvoreGeradora.Count != numVertices - 1)
