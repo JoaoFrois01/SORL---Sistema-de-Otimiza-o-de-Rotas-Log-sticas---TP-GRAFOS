@@ -4,106 +4,157 @@ using Models;
 
 namespace TP_GRAFOS.Algorithms
 {
-    // Resolve o Cenário B do problema V: "É possível que o inspetor visite
-    // todos os hubs (vértices) exatamente uma vez, retornando ao hub inicial?"
-    //
-    // Isso é o problema do CICLO HAMILTONIANO em um grafo DIRECIONADO.
-    //
-    // Não existe condição simples (P) para decidir isso em geral — o problema
-    // é NP-completo. O algoritmo estudado em sala para isso é BACKTRACKING
-    // com poda: tenta construir o caminho vértice a vértice e desiste assim
-    // que percebe que não há mais como completar.
-    //
-    // Como os grafos de teste fornecidos são pequenos (de 103 bytes a 4,6 kB),
-    // o backtracking é perfeitamente viável em tempo de execução.
     internal static class Hamiltoniano
     {
-        // ----------------------------------------------------------------
-        // 1) VERIFICAÇÃO + CONSTRUÇÃO (em uma única busca)
-        // ----------------------------------------------------------------
-        // Retorna o ciclo encontrado (lista de Ids de vértices, começando
-        // e terminando no mesmo vértice) ou null se não existir.
-        public static List<int>? EncontrarCicloHamiltoniano(Grafo grafo)
-        {
-            if (grafo.Vertices.Count == 0)
-            {
-                return null;
-            }
-
-            int verticeInicial = grafo.Vertices[0].Id;
-
-            List<int> caminho = new List<int>();
-            HashSet<int> visitados = new HashSet<int>();
-
-            caminho.Add(verticeInicial);
-            visitados.Add(verticeInicial);
-
-            bool encontrou = Backtrack(grafo, verticeInicial, verticeInicial, caminho, visitados);
-
-            if (!encontrou)
-            {
-                return null;
-            }
-
-            caminho.Add(verticeInicial); // fecha o ciclo
-            return caminho;
-        }
-
-        // Atalho que só responde sim/não — útil pro menu, quando o usuário
-        // só quer saber se "é possível", sem necessariamente exibir o percurso.
         public static bool VerificarHamiltoniano(Grafo grafo)
         {
-            return EncontrarCicloHamiltoniano(grafo) != null;
-        }
-
-        // ----------------------------------------------------------------
-        // 2) BACKTRACKING RECURSIVO
-        // ----------------------------------------------------------------
-        // verticeAtual: último vértice incluído no caminho parcial
-        // verticeInicial: para onde precisamos voltar ao final
-        // caminho: caminho parcial construído até agora (mutado por referência)
-        // visitados: conjunto de vértices já usados no caminho parcial
-        private static bool Backtrack(Grafo grafo, int verticeAtual, int verticeInicial, List<int> caminho, HashSet<int> visitados)
-        {
-            // Caso base: já visitamos todos os vértices.
-            // Só fecha o ciclo se existir aresta de volta para o início.
-            if (caminho.Count == grafo.Vertices.Count)
+            if (grafo.Vertices.Count < 3)
             {
-                return ExisteAresta(grafo, verticeAtual, verticeInicial);
+                return false;
             }
 
-            List<Vertice> adjacentes = grafo.ObterAdjacentes(verticeAtual);
+            int n = grafo.Vertices.Count;
 
-            foreach (Vertice candidato in adjacentes)
+            Dictionary<int, int> grauTotal = new Dictionary<int, int>();
+
+            for (int i = 0; i < grafo.Vertices.Count; i++)
             {
-                if (!visitados.Contains(candidato.Id))
-                {
-                    // Escolhe
-                    caminho.Add(candidato.Id);
-                    visitados.Add(candidato.Id);
+                Vertice v = grafo.Vertices[i];
+                grauTotal[v.Id] = v.GrauDeEntrada + v.GrauDeSaida;
+            }
 
-                    // Tenta completar o resto do caminho a partir daqui
-                    if (Backtrack(grafo, candidato.Id, verticeInicial, caminho, visitados))
-                    {
-                        return true;
-                    }
+            if (SatisfazDirac(grauTotal, n))
+            {
+                return true;
+            }
 
-                    // Desfaz (poda) e tenta o próximo candidato
-                    caminho.RemoveAt(caminho.Count - 1);
-                    visitados.Remove(candidato.Id);
-                }
+            if (SatisfazOre(grafo, grauTotal, n))
+            {
+                return true;
+            }
+
+            if (SatisfazBondyChvatal(grafo, grauTotal, n))
+            {
+                return true;
             }
 
             return false;
         }
 
-        private static bool ExisteAresta(Grafo grafo, int idOrigem, int idDestino)
+        private static bool SatisfazDirac(Dictionary<int, int> grauTotal, int n)
         {
-            List<Vertice> adjacentes = grafo.ObterAdjacentes(idOrigem);
-
-            foreach (Vertice v in adjacentes)
+            foreach (KeyValuePair<int, int> par in grauTotal)
             {
-                if (v.Id == idDestino)
+                if (par.Value * 2 < n)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool SatisfazOre(Grafo grafo, Dictionary<int, int> grauTotal, int n)
+        {
+            List<Vertice> vertices = grafo.Vertices;
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                for (int j = i + 1; j < vertices.Count; j++)
+                {
+                    Vertice u = vertices[i];
+                    Vertice v = vertices[j];
+
+                    if (!SaoAdjacentes(grafo, u.Id, v.Id))
+                    {
+                        if (grauTotal[u.Id] + grauTotal[v.Id] < n)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static bool SatisfazBondyChvatal(Grafo grafo, Dictionary<int, int> grauTotal, int n)
+        {
+            List<Vertice> vertices = grafo.Vertices;
+
+            Dictionary<int, int> idParaIndice = new Dictionary<int, int>();
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                idParaIndice[vertices[i].Id] = i;
+            }
+
+            bool[,] fecho = new bool[n, n];
+
+            for (int i = 0; i < grafo.Arestas.Count; i++)
+            {
+                int origem = idParaIndice[grafo.Arestas[i].Origem.Id];
+                int destino = idParaIndice[grafo.Arestas[i].Destino.Id];
+
+                fecho[origem, destino] = true;
+                fecho[destino, origem] = true;
+            }
+
+            int[] grauFecho = new int[n];
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                grauFecho[i] = grauTotal[vertices[i].Id];
+            }
+
+            bool adicionou = true;
+
+            while (adicionou)
+            {
+                adicionou = false;
+
+                for (int i = 0; i < n; i++)
+                {
+                    for (int j = i + 1; j < n; j++)
+                    {
+                        if (!fecho[i, j] && grauFecho[i] + grauFecho[j] >= n)
+                        {
+                            fecho[i, j] = true;
+                            fecho[j, i] = true;
+
+                            grauFecho[i]++;
+                            grauFecho[j]++;
+
+                            adicionou = true;
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if (i != j && !fecho[i, j])
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static bool SaoAdjacentes(Grafo grafo, int idU, int idV)
+        {
+            for (int i = 0; i < grafo.Arestas.Count; i++)
+            {
+                Aresta a = grafo.Arestas[i];
+
+                bool uParaV = a.Origem.Id == idU && a.Destino.Id == idV;
+                bool vParaU = a.Origem.Id == idV && a.Destino.Id == idU;
+
+                if (uParaV || vParaU)
                 {
                     return true;
                 }
@@ -112,10 +163,57 @@ namespace TP_GRAFOS.Algorithms
             return false;
         }
 
-        // Texto amigável para log/console, ex: "1 -> 3 -> 2 -> 1"
-        public static string FormatarCiclo(List<int> ciclo)
+        public static string FormatarResultado(Grafo grafo)
         {
-            return string.Join(" -> ", ciclo);
+            if (grafo.Vertices.Count < 3)
+            {
+                return "Grafo com menos de 3 vértices — verificação não aplicável.";
+            }
+
+            int n = grafo.Vertices.Count;
+
+            Dictionary<int, int> grauTotal = new Dictionary<int, int>();
+
+            for (int i = 0; i < grafo.Vertices.Count; i++)
+            {
+                Vertice v = grafo.Vertices[i];
+                grauTotal[v.Id] = v.GrauDeEntrada + v.GrauDeSaida;
+            }
+
+            string resultado = "";
+
+            bool dirac = SatisfazDirac(grauTotal, n);
+
+            resultado += "Teorema de Dirac (1952):          "
+                       + (dirac ? "SATISFEITO — grafo é hamiltoniano." : "Não satisfeito.")
+                       + "\n";
+
+            if (!dirac)
+            {
+                bool ore = SatisfazOre(grafo, grauTotal, n);
+
+                resultado += "Teorema de Ore (1961):            "
+                           + (ore ? "SATISFEITO — grafo é hamiltoniano." : "Não satisfeito.")
+                           + "\n";
+
+                if (!ore)
+                {
+                    bool bondy = SatisfazBondyChvatal(grafo, grauTotal, n);
+
+                    resultado += "Teorema de Bondy-Chvátal (1976):  "
+                               + (bondy ? "SATISFEITO — grafo é hamiltoniano." : "Não satisfeito.")
+                               + "\n";
+
+                    if (!bondy)
+                    {
+                        resultado += "Nenhum teorema foi conclusivo.\n";
+                        resultado += "O grafo pode ou não ser hamiltoniano.\n";
+                        resultado += "(Determinação exata requer busca exaustiva — NP-Completo, Karp 1972)";
+                    }
+                }
+            }
+
+            return resultado;
         }
     }
 }
