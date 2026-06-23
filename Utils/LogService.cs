@@ -226,7 +226,14 @@ namespace Utils
             texto.AppendLine();
             texto.AppendLine("-- Cenario B: Percurso de Hubs (Ciclo Hamiltoniano) --");
             texto.AppendLine("Algoritmo executado: Verificacao por Teoremas (Dirac, Ore, Bondy-Chvatal) + Forca Bruta");
-            texto.AppendLine("Vertice inicial: " + (grafo.Vertices.Count > 0 ? grafo.Vertices[0].Id.ToString() : "N/A"));
+            string verticeInicial = "N/A";
+
+            if (grafo.Vertices.Count > 0)
+            {
+                verticeInicial = grafo.Vertices[0].Id.ToString();
+            }
+
+            texto.AppendLine("Vertice inicial: " + verticeInicial);
             texto.AppendLine();
             
             texto.AppendLine(resultadoHamiltoniano);

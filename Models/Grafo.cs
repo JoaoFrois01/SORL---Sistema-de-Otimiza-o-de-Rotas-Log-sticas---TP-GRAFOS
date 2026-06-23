@@ -116,7 +116,7 @@ namespace Models
 
         public Vertice AdicionarVertice(Vertice v)
         {
-            Vertice? existente = ObterVerticePorId(v.Id);
+            Vertice existente = ObterVerticePorId(v.Id);
 
             if (existente != null)
             {
@@ -163,7 +163,17 @@ namespace Models
         //M�todo que ir� retornar qual a posi��o do v�rtice, independente de qual representa��o esteja sendo utilizada.
         public int PosicaoVertice(Vertice vertice)
         {
-           int posicao = vertices.FindIndex(v =>  v.Id == vertice.Id);
+            int posicao = -1;
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                if (vertices[i].Id == vertice.Id)
+                {
+                    posicao = i;
+                    break;
+                }
+            }
+
             return posicao;
         }
         public double PesoAresta (Vertice origem, Vertice destino)
@@ -184,7 +194,7 @@ namespace Models
             return vertices[posicao];
         }
 
-        public Vertice? ObterVerticePorId(int id)
+        public Vertice ObterVerticePorId(int id)
         {
             for (int i = 0; i < vertices.Count; i++)
             {

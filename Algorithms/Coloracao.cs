@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Models;
 
 namespace TP_GRAFOS.Algorithms
@@ -51,9 +50,7 @@ namespace TP_GRAFOS.Algorithms
         {
             ConstruirGrafoDeConflitos(grafo);
 
-            List<int> ordemDeProcessamento = Enumerable.Range(0, rotas.Count)
-                .OrderByDescending(indice => grafoConflitos[indice].Count)
-                .ToList();
+            List<int> ordemDeProcessamento = MontarOrdemDeProcessamento();
 
             Dictionary<int, int> corPorRota = new Dictionary<int, int>();
             int corAtual = 1;
@@ -116,7 +113,49 @@ namespace TP_GRAFOS.Algorithms
                 return 0;
             }
 
-            return corPorRota.Values.Max();
+            int maiorCor = 0;
+
+            foreach (KeyValuePair<int, int> par in corPorRota)
+            {
+                if (par.Value > maiorCor)
+                {
+                    maiorCor = par.Value;
+                }
+            }
+
+            return maiorCor;
+        }
+
+        private List<int> MontarOrdemDeProcessamento()
+        {
+            List<int> ordem = new List<int>();
+
+            for (int i = 0; i < rotas.Count; i++)
+            {
+                ordem.Add(i);
+            }
+
+            for (int i = 0; i < ordem.Count - 1; i++)
+            {
+                int indiceMaior = i;
+
+                for (int j = i + 1; j < ordem.Count; j++)
+                {
+                    if (grafoConflitos[ordem[j]].Count > grafoConflitos[ordem[indiceMaior]].Count)
+                    {
+                        indiceMaior = j;
+                    }
+                }
+
+                if (indiceMaior != i)
+                {
+                    int auxiliar = ordem[i];
+                    ordem[i] = ordem[indiceMaior];
+                    ordem[indiceMaior] = auxiliar;
+                }
+            }
+
+            return ordem;
         }
     }
 }

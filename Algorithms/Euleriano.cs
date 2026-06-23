@@ -230,7 +230,19 @@ namespace TP_GRAFOS.Algorithms
 
         public static string FormatarCircuito(List<int> circuito)
         {
-            return string.Join(" -> ", circuito);
+            string texto = "";
+
+            for (int i = 0; i < circuito.Count; i++)
+            {
+                if (i > 0)
+                {
+                    texto += " -> ";
+                }
+
+                texto += circuito[i];
+            }
+
+            return texto;
         }
     }
 }
