@@ -38,6 +38,15 @@ namespace TP_GRAFOS.Algorithms
                 return true;
             }
 
+            if (grafo.Vertices.Count <= 15)
+            {
+                List<int> cicloEncontrado = BuscaForcaBruta(grafo);
+                if (cicloEncontrado != null)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -163,11 +172,81 @@ namespace TP_GRAFOS.Algorithms
             return false;
         }
 
+        private static List<int> BuscaForcaBruta(Grafo grafo)
+        {
+            if (grafo.Vertices.Count == 0) return null;
+
+            List<int> caminhoAtual = new List<int>();
+            HashSet<int> visitados = new HashSet<int>();
+
+            int verticeInicial = grafo.Vertices[0].Id;
+            
+            caminhoAtual.Add(verticeInicial);
+            visitados.Add(verticeInicial);
+
+            if (TentarCaminho(grafo, caminhoAtual, visitados, verticeInicial))
+            {
+                caminhoAtual.Add(verticeInicial);
+                return caminhoAtual;
+            }
+
+            return null; 
+        }
+
+        private static bool TentarCaminho(Grafo grafo, List<int> caminho, HashSet<int> visitados, int verticeInicial)
+        {
+            if (caminho.Count == grafo.Vertices.Count)
+            {
+                int ultimoVertice = caminho[caminho.Count - 1];
+                return ExisteAresta(grafo, ultimoVertice, verticeInicial);
+            }
+
+            int verticeAtual = caminho[caminho.Count - 1];
+
+            for (int i = 0; i < grafo.Arestas.Count; i++)
+            {
+                Aresta aresta = grafo.Arestas[i];
+                
+                if (aresta.Origem.Id == verticeAtual)
+                {
+                    int proximoVertice = aresta.Destino.Id;
+
+                    if (!visitados.Contains(proximoVertice))
+                    {
+                        visitados.Add(proximoVertice);
+                        caminho.Add(proximoVertice);
+
+                        if (TentarCaminho(grafo, caminho, visitados, verticeInicial))
+                        {
+                            return true;
+                        }
+
+                        visitados.Remove(proximoVertice);
+                        caminho.RemoveAt(caminho.Count - 1);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool ExisteAresta(Grafo grafo, int origem, int destino)
+        {
+            for (int i = 0; i < grafo.Arestas.Count; i++)
+            {
+                if (grafo.Arestas[i].Origem.Id == origem && grafo.Arestas[i].Destino.Id == destino)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static string FormatarResultado(Grafo grafo)
         {
             if (grafo.Vertices.Count < 3)
             {
-                return "Grafo com menos de 3 vértices — verificação não aplicável.";
+                return "Grafo com menos de 3 vertices - verificacao nao aplicavel.\n";
             }
 
             int n = grafo.Vertices.Count;
@@ -183,33 +262,46 @@ namespace TP_GRAFOS.Algorithms
             string resultado = "";
 
             bool dirac = SatisfazDirac(grauTotal, n);
-
-            resultado += "Teorema de Dirac (1952):          "
-                       + (dirac ? "SATISFEITO — grafo é hamiltoniano." : "Não satisfeito.")
-                       + "\n";
+            resultado += "Teorema de Dirac (1952):          " + (dirac ? "SATISFEITO" : "Nao satisfeito.") + "\n";
 
             if (!dirac)
             {
                 bool ore = SatisfazOre(grafo, grauTotal, n);
-
-                resultado += "Teorema de Ore (1961):            "
-                           + (ore ? "SATISFEITO — grafo é hamiltoniano." : "Não satisfeito.")
-                           + "\n";
+                resultado += "Teorema de Ore (1961):            " + (ore ? "SATISFEITO" : "Nao satisfeito.") + "\n";
 
                 if (!ore)
                 {
                     bool bondy = SatisfazBondyChvatal(grafo, grauTotal, n);
-
-                    resultado += "Teorema de Bondy-Chvátal (1976):  "
-                               + (bondy ? "SATISFEITO — grafo é hamiltoniano." : "Não satisfeito.")
-                               + "\n";
+                    resultado += "Teorema de Bondy-Chvatal (1976):  " + (bondy ? "SATISFEITO" : "Nao satisfeito.") + "\n";
 
                     if (!bondy)
                     {
-                        resultado += "Nenhum teorema foi conclusivo.\n";
-                        resultado += "O grafo pode ou não ser hamiltoniano.\n";
-                        resultado += "(Determinação exata requer busca exaustiva — NP-Completo, Karp 1972)";
+                        resultado += "Nenhum teorema foi conclusivo matematicamente.\n";
                     }
+                }
+            }
+
+            resultado += "\n--- Busca Exaustiva (Algoritmo de Forca Bruta) ---\n";
+
+            if (grafo.Vertices.Count > 15)
+            {
+                resultado += "AVISO: Grafo muito grande (" + grafo.Vertices.Count + " vertices).\n";
+                resultado += "A busca exaustiva pelo caminho exato foi abortada devido a complexidade da classe NP-Completo.\n";
+                resultado += "Tentativas em grafos dessa magnitude requerem seculos de processamento (ref: Aula Grafos Hamiltonianos, slide 28).\n";
+            }
+            else
+            {
+                List<int> ciclo = BuscaForcaBruta(grafo);
+
+                if (ciclo != null)
+                {
+                    resultado += "Resultado: CICLO ENCONTRADO!\n";
+                    resultado += "Percurso de Hubs: " + string.Join(" -> ", ciclo) + "\n";
+                }
+                else
+                {
+                    resultado += "Resultado: CICLO NAO ENCONTRADO.\n";
+                    resultado += "O algoritmo percorreu todas as possibilidades e provou que o grafo nao e Hamiltoniano.\n";
                 }
             }
 

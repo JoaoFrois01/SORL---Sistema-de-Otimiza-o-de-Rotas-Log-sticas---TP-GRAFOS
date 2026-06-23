@@ -185,7 +185,7 @@ namespace Utils
             return texto.ToString();
         }
 
-        public string RegistrarInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int>? circuitoEuleriano, bool hamiltoniano, string resultadoHamiltoniano)
+        public string RegistrarInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int> circuitoEuleriano, bool hamiltoniano, string resultadoHamiltoniano)
         {
             string nomeArquivo = "inspecao_" + LimparNomeArquivo(nomeGrafo) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
             string caminhoArquivo = Path.Combine(pastaLogs, nomeArquivo);
@@ -198,7 +198,7 @@ namespace Utils
             return caminhoArquivo;
         }
 
-        public string MontarTextoInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int>? circuitoEuleriano, bool hamiltoniano, string resultadoHamiltoniano)
+        public string MontarTextoInspecao(string nomeGrafo, Grafo grafo, bool euleriano, List<int> circuitoEuleriano, bool hamiltoniano, string resultadoHamiltoniano)
         {
             StringBuilder texto = new StringBuilder();
 
@@ -209,7 +209,7 @@ namespace Utils
             texto.AppendLine();
 
             texto.AppendLine("-- Cenario A: Percurso de Rotas (Circuito Euleriano) --");
-            texto.AppendLine("Algoritmo executado: verificacao de graus + Hierholzer");
+            texto.AppendLine("Algoritmo executado: verificacao de graus + Fleury");
             texto.AppendLine("Condicao: grau de entrada == grau de saida para todo vertice e grafo fracamente conexo");
 
             if (euleriano && circuitoEuleriano != null)
@@ -225,7 +225,7 @@ namespace Utils
 
             texto.AppendLine();
             texto.AppendLine("-- Cenario B: Percurso de Hubs (Ciclo Hamiltoniano) --");
-            texto.AppendLine("Algoritmo executado: Verificacao por Teoremas (Dirac, Ore, Bondy-Chvatal)");
+            texto.AppendLine("Algoritmo executado: Verificacao por Teoremas (Dirac, Ore, Bondy-Chvatal) + Forca Bruta");
             texto.AppendLine("Vertice inicial: " + (grafo.Vertices.Count > 0 ? grafo.Vertices[0].Id.ToString() : "N/A"));
             texto.AppendLine();
             
