@@ -31,7 +31,7 @@ namespace TP_GRAFOS.Algorithms
 
             for (int contagem = 0; contagem < numVertices && u != -1 ; contagem++)
             {
-                // TODO 1
+                
                  u = -1;
                 menorDistancia = double.MaxValue;
 
@@ -44,35 +44,36 @@ namespace TP_GRAFOS.Algorithms
                     }
                 }
 
-                visitado[u] = true;
-
-                // Obtém o vértice correspondente à posição u
-                Vertice verticeAtual = grafo.ObterVertice(u);
-
-                // TODO 3
-                List<Vertice> adjacentes =
-                    grafo.ObterAdjacentes(verticeAtual.Id);
-
-                // TODO 4
-                foreach (Vertice v in adjacentes)
+                if (u != -1)
                 {
-                    int posV = grafo.PosicaoVertice(v);
+                    visitado[u] = true;
 
-                    double peso =
-                        grafo.PesoAresta(verticeAtual, v);
+                    // Obtém o vértice correspondente à posição u
+                    Vertice verticeAtual = grafo.ObterVertice(u);
 
-                    double novaDistancia =
-                        distancias[u] + peso;
+                    List<Vertice> adjacentes =
+                        grafo.ObterAdjacentes(verticeAtual.Id);
 
-                    if (novaDistancia < distancias[posV])
+                    foreach (Vertice v in adjacentes)
                     {
-                        distancias[posV] = novaDistancia;
-                        predecessores[posV] = verticeAtual;
+                        int posV = grafo.PosicaoVertice(v);
+
+                        double peso =
+                            grafo.PesoAresta(verticeAtual, v);
+
+                        double novaDistancia =
+                            distancias[u] + peso;
+
+                        if (novaDistancia < distancias[posV])
+                        {
+                            distancias[posV] = novaDistancia;
+                            predecessores[posV] = verticeAtual;
+                        }
                     }
                 }
             }
 
-            // TODO 5
+            
             int posDestino = grafo.PosicaoVertice(destino);
 
             if (distancias[posDestino] == double.MaxValue)
