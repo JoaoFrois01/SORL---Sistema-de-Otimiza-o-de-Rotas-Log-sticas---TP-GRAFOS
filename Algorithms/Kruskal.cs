@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Models;
 
 namespace TP_GRAFOS.Algorithms
@@ -46,9 +45,7 @@ namespace TP_GRAFOS.Algorithms
             }
 
             
-            List<Aresta> arestasOrdenadas = grafo.Arestas
-                .OrderBy(a => a.Peso)
-                .ToList();
+            List<Aresta> arestasOrdenadas = OrdenarArestasPorPeso(grafo.Arestas);
 
             List<Aresta> arvoreGeradora = new List<Aresta>();
             double custoTotal = 0;
@@ -106,6 +103,38 @@ namespace TP_GRAFOS.Algorithms
                 custoTotal;
 
             return resultado;
+        }
+
+        private static List<Aresta> OrdenarArestasPorPeso(List<Aresta> arestas)
+        {
+            List<Aresta> ordenadas = new List<Aresta>();
+
+            for (int i = 0; i < arestas.Count; i++)
+            {
+                ordenadas.Add(arestas[i]);
+            }
+
+            for (int i = 0; i < ordenadas.Count - 1; i++)
+            {
+                int indiceMenor = i;
+
+                for (int j = i + 1; j < ordenadas.Count; j++)
+                {
+                    if (ordenadas[j].Peso < ordenadas[indiceMenor].Peso)
+                    {
+                        indiceMenor = j;
+                    }
+                }
+
+                if (indiceMenor != i)
+                {
+                    Aresta auxiliar = ordenadas[i];
+                    ordenadas[i] = ordenadas[indiceMenor];
+                    ordenadas[indiceMenor] = auxiliar;
+                }
+            }
+
+            return ordenadas;
         }
     }
 }

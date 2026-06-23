@@ -24,7 +24,7 @@ static string EscolherGrafo()
     if (op >= 1 && op <= 7)
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        caminho = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "Data", "GrafosDimacs", $"grafo0{op}.dimacs"));
+        caminho = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "Data", "GrafosDimacs", "grafo0" + op + ".dimacs"));
         return caminho;
     }
     else
@@ -68,8 +68,8 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             Console.WriteLine("Escolha o Hub Final:");
             int hubFinal = LerInteiro();
 
-            Vertice? vInicial = grafo.ObterVerticePorId(hubInicial);
-            Vertice? vFinal = grafo.ObterVerticePorId(hubFinal);
+            Vertice vInicial = grafo.ObterVerticePorId(hubInicial);
+            Vertice vFinal = grafo.ObterVerticePorId(hubFinal);
 
             if (vInicial != null && vFinal != null)
             {
@@ -132,7 +132,7 @@ static void ExecutarMenuPrincipal(string pastaDados, LogService logService)
             LeitorDimacs.Ler(caminhoGrafo, ref grafo);
 
             bool euleriano = Euleriano.VerificarEuleriano(grafo);
-            List<int>? circuitoEuleriano = null;
+            List<int> circuitoEuleriano = null;
 
             Console.WriteLine("-- Cenario A: Circuito Euleriano --");
             if (euleriano)
@@ -300,10 +300,23 @@ static void ExecutarTesteInspecaoNosGrafos(string pastaDados, LogService logServ
         Console.WriteLine("  Coloracao: " + totalTurnos + " turno(s)");
 
         bool euleriano = Euleriano.VerificarEuleriano(grafo);
-        List<int>? circuitoEuleriano = null;
+        List<int> circuitoEuleriano = null;
         if (euleriano)
+        {
             circuitoEuleriano = Euleriano.ConstruirCircuito(grafo);
-        Console.WriteLine("  Euleriano: " + (euleriano ? "EXISTE" : "NAO existe"));
+        }
+
+        string textoEuleriano = "";
+        if (euleriano)
+        {
+            textoEuleriano = "EXISTE";
+        }
+        else
+        {
+            textoEuleriano = "NAO existe";
+        }
+
+        Console.WriteLine("  Euleriano: " + textoEuleriano);
 
         bool hamiltoniano = Hamiltoniano.VerificarHamiltoniano(grafo);
         string resultadoHamiltoniano = Hamiltoniano.FormatarResultado(grafo);
@@ -350,13 +363,13 @@ static string SelecionarArquivoGrafo(string[] arquivos)
 
 static int LerInteiro()
 {
-    string? entrada = Console.ReadLine();
+    string entrada = Console.ReadLine();
     int valor = 0;
     bool numeroValido = false;
 
     while (!numeroValido)
     {
-        if (string.IsNullOrWhiteSpace(entrada))
+        if (EntradaVazia(entrada))
         {
             Console.Write("Valor invalido. Digite um numero inteiro: ");
             entrada = Console.ReadLine();
@@ -376,6 +389,29 @@ static int LerInteiro()
     }
 
     return valor;
+}
+
+static bool EntradaVazia(string entrada)
+{
+    if (entrada == null)
+    {
+        return true;
+    }
+
+    if (entrada.Length == 0)
+    {
+        return true;
+    }
+
+    for (int i = 0; i < entrada.Length; i++)
+    {
+        if (entrada[i] != ' ' && entrada[i] != '\t')
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static int ObterMaiorIdVertice(Grafo grafo)

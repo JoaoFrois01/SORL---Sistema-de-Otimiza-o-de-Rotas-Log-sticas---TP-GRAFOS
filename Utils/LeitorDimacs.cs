@@ -18,7 +18,7 @@ namespace Utils
             try
             {
                 StreamReader arquivo = new StreamReader(caminhoArquivo, Encoding.UTF8, false);
-                string? linhaCabecalho = arquivo.ReadLine();
+                string linhaCabecalho = arquivo.ReadLine();
 
                 if (linhaCabecalho == null)
                 {
@@ -27,7 +27,7 @@ namespace Utils
                     return false;
                 }
 
-                string[] separadorCabecalho = linhaCabecalho.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                string[] separadorCabecalho = linhaCabecalho.Split(' ');
                 int quantidadeVertices = int.Parse(separadorCabecalho[0]);
                 int quantidadeArestas = int.Parse(separadorCabecalho[1]);
 
@@ -39,13 +39,13 @@ namespace Utils
                     grafo.AdicionarVertice(vertice);
                 }
 
-                string? linha = arquivo.ReadLine();
+                string linha = arquivo.ReadLine();
 
                 while (linha != null)
                 {
                     if (linha.Trim().Length > 0)
                     {
-                        string[] separadorLinhas = linha.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                        string[] separadorLinhas = linha.Split(' ');
 
                         if (separadorLinhas.Length >= 4)
                         {
@@ -54,8 +54,8 @@ namespace Utils
                             int peso = int.Parse(separadorLinhas[2]);
                             int capacidade = int.Parse(separadorLinhas[3]);
 
-                            Vertice? origem = grafo.ObterVerticePorId(idOrigem);
-                            Vertice? destino = grafo.ObterVerticePorId(idDestino);
+                            Vertice origem = grafo.ObterVerticePorId(idOrigem);
+                            Vertice destino = grafo.ObterVerticePorId(idDestino);
 
                             if (origem != null && destino != null)
                             {

@@ -262,17 +262,17 @@ namespace TP_GRAFOS.Algorithms
             string resultado = "";
 
             bool dirac = SatisfazDirac(grauTotal, n);
-            resultado += "Teorema de Dirac (1952):          " + (dirac ? "SATISFEITO" : "Nao satisfeito.") + "\n";
+            resultado += "Teorema de Dirac (1952):          " + TextoSatisfacao(dirac) + "\n";
 
             if (!dirac)
             {
                 bool ore = SatisfazOre(grafo, grauTotal, n);
-                resultado += "Teorema de Ore (1961):            " + (ore ? "SATISFEITO" : "Nao satisfeito.") + "\n";
+                resultado += "Teorema de Ore (1961):            " + TextoSatisfacao(ore) + "\n";
 
                 if (!ore)
                 {
                     bool bondy = SatisfazBondyChvatal(grafo, grauTotal, n);
-                    resultado += "Teorema de Bondy-Chvatal (1976):  " + (bondy ? "SATISFEITO" : "Nao satisfeito.") + "\n";
+                    resultado += "Teorema de Bondy-Chvatal (1976):  " + TextoSatisfacao(bondy) + "\n";
 
                     if (!bondy)
                     {
@@ -296,7 +296,7 @@ namespace TP_GRAFOS.Algorithms
                 if (ciclo != null)
                 {
                     resultado += "Resultado: CICLO ENCONTRADO!\n";
-                    resultado += "Percurso de Hubs: " + string.Join(" -> ", ciclo) + "\n";
+                    resultado += "Percurso de Hubs: " + FormatarCiclo(ciclo) + "\n";
                 }
                 else
                 {
@@ -306,6 +306,33 @@ namespace TP_GRAFOS.Algorithms
             }
 
             return resultado;
+        }
+
+        private static string TextoSatisfacao(bool satisfeito)
+        {
+            if (satisfeito)
+            {
+                return "SATISFEITO";
+            }
+
+            return "Nao satisfeito.";
+        }
+
+        private static string FormatarCiclo(List<int> ciclo)
+        {
+            string texto = "";
+
+            for (int i = 0; i < ciclo.Count; i++)
+            {
+                if (i > 0)
+                {
+                    texto += " -> ";
+                }
+
+                texto += ciclo[i];
+            }
+
+            return texto;
         }
     }
 }
