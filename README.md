@@ -57,8 +57,16 @@ SORL/
 │   ├── LeitorDimacs.cs
 │   └── LogService.cs
 ├── Logs/
+├── Docs/
+│   └── Relatorio_TP_Grafos.pdf
+├── UML/
+│   ├── 01_modelos_base.svg
+│   ├── 02_algoritmos_e_servicos.svg
+│   ├── 03_fluxos_de_uso.svg
+│   ├── 04_sequencia_fluxo_maximo.svg
+│   └── 05_sequencia_manutencao_inspecao.svg
 ├── Data/
-│   └── grafos_dimacs/
+│   └── GrafosDimacs/
 └── Program.cs
 ```
 
@@ -70,7 +78,7 @@ cd SORL
 dotnet run
 ```
 
-O menu principal permite escolher o grafo de entrada (entre os disponibilizados em `Data/grafos_dimacs/`) e a análise desejada:
+O projeto está configurado para **.NET 10.0**. O menu principal permite escolher o grafo de entrada (entre os disponibilizados em `Data/GrafosDimacs/`) e a análise desejada:
 
 ```
 1 - Menor custo entre dois hubs
@@ -78,6 +86,8 @@ O menu principal permite escolher o grafo de entrada (entre os disponibilizados 
 3 - Árvore Geradora Mínima (rede de comunicação)
 4 - Agendamento de manutenções
 5 - Percurso de inspeção (Euleriano / Hamiltoniano)
+6 - Testar fluxo máximo nos 7 grafos
+7 - Testar inspeção nos 7 grafos
 0 - Sair
 ```
 
@@ -85,15 +95,21 @@ Os resultados de cada execução (caminhos, fluxos, custos, turnos e percursos) 
 
 ## Equipe e divisão de responsabilidades
 
-| Integrante | Frente de trabalho |
-|---|---|
-| **Membro 1** | Arquitetura do projeto, classes base (`Grafo`, `Vertice`, `Aresta`), leitura DIMACS, escolha automática de estrutura de dados, menu principal, Dijkstra (menor caminho), Kruskal (AGM) |
-| **Membro 2** | Capacidades e grafo residual, fluxo máximo e corte mínimo (Edmonds-Karp), serviço de logs, padronização da saída no console |
-| **Membro 3** | Modelagem do grafo de conflitos, coloração (turnos de manutenção), verificação de percursos euleriano e hamiltoniano, testes finais e relatório técnico |
+| Membro | Integrante | Frente de trabalho | Funções principais no sistema |
+|---|---|---|---|
+| **Membro 1** | **Joao Victor Frois** | Arquitetura, base do projeto e algoritmos de custo | Modelagem base (`Grafo`, `Vertice`, `Aresta`), leitura DIMACS, escolha entre lista/matriz, menu, Dijkstra e Kruskal |
+| **Membro 2** | **Joao Victor Soares** | Fluxo, capacidade e logs | Capacidades das arestas, grafo residual, fluxo máximo, corte mínimo, logs e saída padronizada |
+| **Membro 3** | **Lucas Gabriel** | Manutenção, percursos e documentação final | Grafo de conflitos, coloração, turnos de manutenção, Euleriano, Hamiltoniano, testes finais e relatório |
 
 ## Relatório
 
-O relatório técnico documenta:
+O relatório técnico de conclusão está em:
+
+```text
+Docs/Relatorio_TP_Grafos.pdf
+```
+
+Ele responde diretamente às perguntas do trabalho e documenta:
 - Estrutura de dados utilizada e critério de escolha (lista vs. matriz);
 - Leitura e modelagem do grafo;
 - Algoritmo de menor caminho e sua justificativa;
@@ -102,6 +118,8 @@ O relatório técnico documenta:
 - Coloração e geração dos turnos de manutenção;
 - Verificação de percursos euleriano e hamiltoniano;
 - Resultados gerais obtidos nos 7 grafos de teste.
+
+Os diagramas UML finais estão disponíveis em `UML/` no formato SVG.
 
 ## Restrições do trabalho
 
